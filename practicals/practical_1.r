@@ -1,6 +1,6 @@
 #Practical_1
 
-setwd("/home/dickon/Documents/WORK/Edinburgh/Statistical_Programming/group-34-Stats-Programming/practicals")
+setwd(".")
 a <- scan("1581-0.txt",what="character",skip=156)
 n <- length(a)
 a <- a[-((n-2909):n)] ## strip license
@@ -12,7 +12,7 @@ split_punct = function(words, punctuation) {
 	## words after the word it came from
   punc <- paste(punctuation, collapse = "") # combine the vector of punctuation in to a string
   punc_reg <- paste("[", punc, "]", sep="", collapse = "") # put punctuation into regex
-	locations <= grep(punc_reg, words) # indices of words containing punctuation
+	locations <- grep(punc_reg, words) # indices of words containing punctuation
 
 	new_words <- gsub(punc_reg, "", words) 
 	# removes punctuation from any words
