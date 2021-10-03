@@ -33,10 +33,22 @@ split_punct = function(words, punctuation) {
 
 # Q5
 punct <- c(",",".",";","!",":","?")
-b <- split_punct(a, punct) # separating punctuation in a
+a <- split_punct(a, punct) # separating punctuation in a
 
 # Q6
 a <- tolower(a)
-b <- unique(a,incomparables=punct) # searches for unique words, ignores punctuation marks
-ib <- match(a, b) # indices of unique words in vector of words of a
-
+unique_words <- unique(a) # searches for unique words, ignores punctuation marks
+iu <- match(a, unique_words) # indices of unique words in vector of words of a
+count <- tabulate(iu) # count the number of times the unique words appear in the text
+threshold <- min(sort(count, decreasing = TRUE)[1:1000]) # find the counts of the top 1000 most commons words and set the minimum as the threshold
+b <- rep(0, 1000)
+i <- 1
+for (word in count){
+  if (i == 1000){ # break loop after 1000 iterations
+    break
+  }
+  else if (word>= threshold){ # insert the word to the b matrix if its count is larger than the threshold
+    b[i] <- unique_words[word]
+    i = i+1
+  }
+}
