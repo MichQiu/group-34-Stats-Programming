@@ -38,7 +38,7 @@ a <- split_punct(a, punct) # separating punctuation in a
 # Q6
 a <- tolower(a)
 unique_words <- unique(a) # searches for unique words, ignores punctuation marks
-iu <- match(ab, unique_words) # indices of unique words in vector of words of a
+iu <- match(a, unique_words) # indices of unique words in vector of words of a
 count <- tabulate(iu) # count the number of times the unique words appear in the text
 threshold <- min(sort(count, decreasing = TRUE)[1:1000]) # find the counts of the top 1000 most commons words and set the minimum as the threshold
 b <- rep(0, 1000)
