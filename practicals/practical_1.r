@@ -47,4 +47,22 @@ for (word in count){
 }
 
 # Q7
-ib <- match(a, b)
+ib <- match(a, b) # get the indices of the most common words that each of the main text corresponds to
+if ((length(ib) %% 2) != 0) ib <- head(ib, -1) # check if indices vector is odd, remove last element if condition is satisfied
+## create a two column vector, column 1 consist of a sequence of every odd element of the indices vector
+## column 2 consist of a sequence of every even element, thus creating word pairs in subsequent order
+word_pairs <- cbind(ib[seq(1, length(ib), 2)], ib[seq(2, length(ib), 2)])
+wpsum <- rowSums(word_pairs) # get the numerical sums of each row in the word_pairs matrix
+check_na <- is.na(wpsum) # return a boolean matrix of NA values in wpsum
+non_na_rows <- which(check_na %in% FALSE) # get the indices of all the FALSE(not NA) values
+word_pairs <- word_pairs[non_na_rows, 1:2] # redefine word_pairs by getting only the rows with no NA values
+A <- array(0, c(1000, 1000))   # initialize a 1000x1000 matrix
+# use 'i' as a row index to loop through the word pairs
+for (i in c(1:length(word_pairs)/2)){
+  # Assign each common words index pair from the two columns on each row to A and add 1 when they occur
+  A[word_pairs[i,1], word_pairs[i,2]] <- A[word_pairs[i,1], word_pairs[i,2]] + 1
+}
+standardize <- rowSums(A) # get the sums of the word pair counts each row
+for (i in c(1:1000)){
+  A[i,] <- A[i,]/standardize[i] # standardize each row in A into probabilities
+}
