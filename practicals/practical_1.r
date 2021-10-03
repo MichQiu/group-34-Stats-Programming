@@ -38,17 +38,20 @@ a <- split_punct(a, punct) # separating punctuation in a
 # Q6
 a <- tolower(a)
 unique_words <- unique(a) # searches for unique words, ignores punctuation marks
-iu <- match(a, unique_words) # indices of unique words in vector of words of a
+iu <- match(ab, unique_words) # indices of unique words in vector of words of a
 count <- tabulate(iu) # count the number of times the unique words appear in the text
 threshold <- min(sort(count, decreasing = TRUE)[1:1000]) # find the counts of the top 1000 most commons words and set the minimum as the threshold
 b <- rep(0, 1000)
 i <- 1
+j <- 1
 for (word in count){
-  if (i == 1000){ # break loop after 1000 iterations
-    break
+  if (i == 1000) break # break loop after 1000 iterations
+  else if (word >= threshold){ # insert the word to the b vector if its count is larger than the threshold
+    b[i] <- unique_words[j] # j is the index of the most common word identified
+    i = i + 1 # the index for vector b only increase when there a word is inserted
   }
-  else if (word>= threshold){ # insert the word to the b matrix if its count is larger than the threshold
-    b[i] <- unique_words[word]
-    i = i+1
-  }
+  j = j + 1 # j increases for every iteration in the for loop to correctly index the word in unique_words and counts in count
 }
+
+# Q7
+ib <- match(a, b)
