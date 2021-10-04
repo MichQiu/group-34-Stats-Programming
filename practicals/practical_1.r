@@ -30,10 +30,15 @@ a <- split_punct(a, punct) # separating punctuation in a
 
 # Q6
 a <- tolower(a)
+
 unique_words <- unique(a) # searches for unique words, ignores punctuation marks
+
 iu <- match(a, unique_words) # indices of unique words in vector of words of a
+
 count <- tabulate(iu) # count the number of times the unique words appear in the text
+
 threshold <- min(sort(count, decreasing = TRUE)[1:1000]) # find the counts of the top 1000 most commons words and set the minimum as the threshold
+
 b <- rep(0, 1000)
 i <- 1
 j <- 1
@@ -48,21 +53,41 @@ for (word in count){
 
 # Q7
 ib <- match(a, b) # get the indices of the most common words that each of the main text corresponds to
+
 if ((length(ib) %% 2) != 0) ib <- head(ib, -1) # check if indices vector is odd, remove last element if condition is satisfied
 ## create a two column vector, column 1 consist of a sequence of every odd element of the indices vector
 ## column 2 consist of a sequence of every even element, thus creating word pairs in subsequent order
 word_pairs <- cbind(ib[seq(1, length(ib), 2)], ib[seq(2, length(ib), 2)])
+
 wpsum <- rowSums(word_pairs) # get the numerical sums of each row in the word_pairs matrix
 check_na <- is.na(wpsum) # return a boolean matrix of NA values in wpsum
 non_na_rows <- which(check_na %in% FALSE) # get the indices of all the FALSE(not NA) values
 word_pairs <- word_pairs[non_na_rows, 1:2] # redefine word_pairs by getting only the rows with no NA values
+
 A <- array(0, c(1000, 1000))   # initialize a 1000x1000 matrix
 # use 'i' as a row index to loop through the word pairs
 for (i in c(1:length(word_pairs)/2)){
   # Assign each common words index pair from the two columns on each row to A and add 1 when they occur
   A[word_pairs[i,1], word_pairs[i,2]] <- A[word_pairs[i,1], word_pairs[i,2]] + 1
 }
+
 standardize <- rowSums(A) # get the sums of the word pair counts each row
 for (i in c(1:1000)){
   A[i,] <- A[i,]/standardize[i] # standardize each row in A into probabilities
 }
+
+# Q8
+sim_text <- rep("", 50) # create a vector of strings with a dimension of 50
+ni <- floor(runif(1, min = 1, max = 1000)) # draw a random number between 1 and 1000(float) and convert it to integer using floor
+sim_text[1] <- b[ni] # insert the first word into the vector by using the random index
+num_words <- 2
+while (num_words <= length(sim_text)){
+  ## use a while loop to sample the next word until the length of the simulated vector is reached
+  ## sample the next word by choosing from an index between 1 and 1000
+  ## sampling from the conditional probability of word pairs given in matrix A for the current selected word
+  ni <- sample(c(1:length(b)), 1, prob = A[ni,])
+  sim_text[num_words] <- b[ni] # insert the drawn word to the simulated vector
+  num_words <- num_words + 1 # ensure that the indexing increase by 1 every time a word is inserted
+}
+cat(sim_text)
+
