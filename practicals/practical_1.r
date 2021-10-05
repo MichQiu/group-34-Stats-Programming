@@ -1,9 +1,9 @@
 #Practical_1
 
 setwd(".")
-a <- scan("1581-0.txt",what="character",skip=156)
-n <- length(a)
-a <- a[-((n-2909):n)] ## strip license
+full <- scan("1581-0.txt",what="character",skip=156)
+n <- length(full)
+full <- full[-((n-2909):n)] ## strip license
 
 # Q4
 split_punct = function(words, punctuation) {
@@ -26,10 +26,10 @@ split_punct = function(words, punctuation) {
 
 # Q5
 punct <- c(",",".",";","!",":","?")
-a <- split_punct(a, punct) # separating punctuation in a
+full <- split_punct(full, punct) # separating punctuation in a
 
 # Q6
-a <- tolower(a)
+a <- tolower(full)
 
 unique_words <- unique(a) # searches for unique words, ignores punctuation marks
 
@@ -90,4 +90,35 @@ while (num_words <= length(sim_text)){
   num_words <- num_words + 1 # ensure that the indexing increase by 1 every time a word is inserted
 }
 cat(sim_text)
+
+# Q9
+ic <- grep("^[A-Z]", full) # get all the indices of words that start with a capital letter
+dupe <- duplicated(full[ic]) # get a boolean matrix showing if a word is a duplicate or not
+fi <- which(dupe %in% FALSE) # get indices of all the FALSE values (non-duplicates)
+unique_ic <- ic[fi] # get the indices of the words that are not duplicates
+lower_c <- tolower(full[unique_ic]) # get a lower case version of words indexed by unique_ic
+## the capital letter words have been converted into lower case to allow comparison with the b matrix
+## to find out which are the most common capital letter words 
+lower_c <- lower_c[lower_c %in% b] # this vector serves as a reference for the simulation to capitalize these words if they are sampled
+
+# simulation with capitals
+sim_text_c <- rep("", 50)
+ni <- floor(runif(1, min = 1, max = 1000))
+if (b[ni] %in% lower_c){
+  ## if the simulated word is in the vector of most common capital letter words
+  ## then extract the first letter of the word and capitalize it, paste it back with the rest of the word
+  b[ni] <- paste(toupper(substr(b[ni], 1, 1)), substr(b[ni], 2, nchar(b[ni])), sep = "")
+}
+sim_text_c[1] <- b[ni]
+num_words <- 2
+while (num_words <= length(sim_text_c)){
+  ni <- sample(c(1:length(b)), 1, prob = A[ni,])
+  if (b[ni] %in% lower_c){
+    b[ni] <- paste(toupper(substr(b[ni], 1, 1)), substr(b[ni], 2, nchar(b[ni])), sep = "")
+  }
+  sim_text_c[num_words] <- b[ni]
+  num_words <- num_words + 1
+}
+cat(sim_text_c)
+
 
