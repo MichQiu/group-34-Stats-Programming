@@ -12,14 +12,15 @@ split_punct = function(words, punctuation) {
 	## words after the word it came from
   
   punc <- paste(punctuation, collapse = "") # combine the vector of punctuation in to a string
-  punc_reg <- paste("[", punc, "]", sep="", collapse = "") # put punctuation into regex
-	locations <- grep(punc_reg, words) # indices of words containing punctuation
-  locations_add <- locations+1:length(locations) # add 1 positions for every punctuation that will be inserted into the text
+  punc_reg <- paste("[", punc, "]", sep="", collapse = "") # put punctuation into regular expression (for grep)
+	locations <- grep(punc_reg, words,fixed=TRUE) # indices of words containing punctuation
+
+  locations_add <- locations + 1:length(locations) # add 1 positions for every punctuation that will be inserted into the text
 	no_punc <- gsub(punc_reg, "", words) # removes punctuation from any words
 	new_words <- rep("", length(words)+length(locations_add)) # create an empty vector with the combined length of words and punctuation
 	
 	# get the last character(punctuation) from each word with the punctuation and add them at their respective positions
-	new_words[locations_add] <- substr(words[locations], nchar(words[locations]), nchar(words[locations])) 
+	new_words[locations_add] <- substr(words[locations], nchar(words[locations]), nchar(words[locations]))
 	new_words[-locations_add] <- no_punc # add the the words without the punctuation in non-punctuation indices
 	return (new_words)
 }
@@ -29,11 +30,11 @@ punct <- c(",",".",";","!",":","?")
 full <- split_punct(full, punct) # separating punctuation in a
 
 # Q6
-a <- tolower(full)
+a <- tolower(full) # makes all letters lower case in text
 
 unique_words <- unique(a) # searches for unique words, ignores punctuation marks
 
-iu <- match(a, unique_words) # indices of unique words in vector of words of a
+iu <- match(a, unique_words) # indices of words in vector of unique words of a
 
 count <- tabulate(iu) # count the number of times the unique words appear in the text
 
