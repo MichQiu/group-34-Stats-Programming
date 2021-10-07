@@ -1,4 +1,5 @@
 #Practical_1
+# Github repo link: https://github.com/MichQiu/group-34-Stats-Programming.git
 
 setwd(".")
 full <- scan("1581-0.txt",what="character",skip=156)
@@ -13,7 +14,7 @@ split_punct = function(words, punctuation) {
   
   punc <- paste(punctuation, collapse = "") # combine the vector of punctuation in to a string
   punc_reg <- paste("[", punc, "]", sep="", collapse = "") # put punctuation into regular expression (for grep)
-	locations <- grep(punc_reg, words,fixed=TRUE) # indices of words containing punctuation
+	locations <- grep(punc_reg, words) # indices of words containing punctuation
 
   locations_add <- locations + 1:length(locations) # add 1 positions for every punctuation that will be inserted into the text
 	no_punc <- gsub(punc_reg, "", words) # removes punctuation from any words
