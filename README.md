@@ -1,3 +1,5 @@
 # group-34-Stats-Programming
-group 34
-an edit to the README
+All practicals can be found in the practicals folder
+
+Completion status
+- Practical 1: Complete
