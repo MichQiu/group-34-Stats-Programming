@@ -45,13 +45,13 @@ for (i in 2:t) { # loop over days
 
 }
 
-return(list(S=S, E=E, I=I, R=R, beta=beta, N=N, N0.1=N0.1))
+return(list(S=S, E=E, I=I, R=R, beta=beta, N=N, N0.1=N0.1, NR=NR))
 
 }
 
 SEIR <- model()
 
-
+plot(1:100, SEIR$N)  
 
 
 
