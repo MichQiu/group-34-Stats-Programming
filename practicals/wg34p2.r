@@ -1,4 +1,14 @@
-# Write a bit here about the code in general and explain SEIR
+# Group 34, Dickon Fell, Michael Qiu, Honglin Li
+# https://github.com/MichQiu/group-34-Stats-Programming
+
+# This code contains a function to simulate covid transmission amongst a population with various parameters. The function uses the SEIR (Susceptible-Exposed-Infectious-Recovered) framework
+# to model the spread of the disease, by tracking the number of people in each group over a number of days.
+
+# Below that is the code to produce two plots, the first of which compares daily new infections amongst three groups of the population after running one simultion, and the second of
+# which shows the variability in the simulation by plotting the results of 10 replicate simulations.
+
+# The idea of this code is to explore how daily new infection numbers from different samples of the population might fail to represent the whole, 
+# and I have written some comments at the end with my conclusions on this matter.
 
 model <- function(n=5500000, E0=10, t=100, gamma=1/3, delta=1/5, lambda=0.4/n) {
 # covid transmission simulation model
@@ -100,7 +110,7 @@ for (i in 1:10) { # run 10 simulations
 
 }
 
-# the following mess is a result of last-minute work and my inability to find a way to check the maximum of of elements across various sublists in a vectorised way
+# the following mess is a result of my inability to find a way to check the maximum of of elements across various sublists in a vectorised way
 # however, it does work
 N_max <- N_min <- rep(0, 100) # initialise trajectory vectors of max and min new daily infections
 
@@ -145,7 +155,10 @@ lines(1:100, NR_max)
 polygon(c(1:100, 100:1), c(NR_max, rev(NR_min)), col=rgb(0,0,1,0.5))
 legend("topleft", inset=.05, legend = c("Whole Pop. (/1000 ppl)","Lowest 10% of Beta (/100 ppl)", "Random 0.1% sample"), col = c, lty=1)
 
-
+# We can see from these two plots that those with beta values in the lowest 10% have far lower daily new infection numbers than the whole population and a random sample from the population,
+# even when taking into account the variability of the simulation. If indeed someone who downloads a covid symptom tracker app is more likely to restrict their contact with others
+# (have a lower beta value) to avoid the disease, then we can see that using the daily new infections data from that group to represent the whole population would yield inaccurate results. 
+# The random 0.1% sample of the population much more closely resembles the data for the whole population, so this appears to be a more representative way of sampling.
 
 
 
