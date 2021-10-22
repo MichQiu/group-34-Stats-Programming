@@ -78,34 +78,72 @@ lines(1:100, NR_std, col=c[3]) # add other two daily infections data to the same
 
 legend("topleft", inset=.05, legend = c("Whole Pop. (/1000 ppl)","Lowest 10% of Beta (/100 ppl)", "Random 0.1% sample"), col = c, lty=1) 
 
-# vertical lines indicating days at which maxima are attained
-y1 <- -10:floor(max(N_std)); y2 <- -10:floor(max(N0.1_std)); y3 <- -10:max(NR_std)
+# plotting vertical lines indicating days at which maxima are attained
+y1 <- -10:floor(max(N_std)); y2 <- -10:floor(max(N0.1_std)); y3 <- -10:max(NR_std) # floor function avoids messy lists and sticks to integers
 lines(rep(N_maxday, length(y1)), y1, col=c[1], lty=2)
-lines(rep(N0.1_maxday, length(y1)), y2, col=c[1], lty=2)
-lines(rep(NR_maxday, length(y1)), y3, col=c[1], lty=2)
+lines(rep(N0.1_maxday, length(y2)), y2, col=c[2], lty=2)
+lines(rep(NR_maxday, length(y3)), y3, col=c[3], lty=2)
+
+x11() # do not replace current window with next plot
+
+
 
 
 # running 10 replicate simulations to visualise the variability
+# my idea here is to show the variability by plotting the lines of the maximum and mininimum new daily infections,
+# and then colouring in the space between them.
 
-SEIR <- vector(mode="list", length=10) # create empty list to store simulation results
-N <- vector(mode="list", length=10)
+SEIR <- vector(mode="list", length=10) # create empty lists to store simulation results
 for (i in 1:10) { # run 10 simulations
 
         SEIR[[i]] <- model() # generate trajectories and store in the list
-        N[[i]] <- SEIR[[i]]$N
 
 }
 
-N_max <- N_min <- rep(0, 100)
+# the following mess is a result of last-minute work and my inability to find a way to check the maximum of of elements across various sublists in a vectorised way
+# however, it does work
+N_max <- N_min <- rep(0, 100) # initialise trajectory vectors of max and min new daily infections
+
+for (i in 1:100) { # loop over days. At each day, find the max and min number of new infections amongst the 10 simulations
+
+        N_max[i] <- max(SEIR[[1]]$N[i], SEIR[[2]]$N[i],SEIR[[3]]$N[i],SEIR[[4]]$N[i],SEIR[[5]]$N[i],SEIR[[6]]$N[i],SEIR[[7]]$N[i],SEIR[[8]]$N[i],SEIR[[9]]$N[i], SEIR[[10]]$N[i])
+        N_min[i] <- min(SEIR[[1]]$N[i], SEIR[[2]]$N[i],SEIR[[3]]$N[i],SEIR[[4]]$N[i],SEIR[[5]]$N[i],SEIR[[6]]$N[i],SEIR[[7]]$N[i],SEIR[[8]]$N[i],SEIR[[9]]$N[i], SEIR[[10]]$N[i])
+
+}
+
+plot(1:100, N_min/1000, 'l', ylim=c(0,200), main="Daily New COVID Infections in 10 simulations", xlab="day", ylab="number of infections")
+lines(1:100, N_max/1000) # plot min and max lines
+polygon(c(1:100, 100:1), c(N_max/1000, rev(N_min/1000)), col=rgb(1,0,0,0.5)) # fill in space between them with colour
+
+# repeat for the 10% smallest beta values and random 0.1% sample
+
+N0.1_max <- N0.1_min <- rep(0, 100)
 
 for (i in 1:100) {
 
-        N_max[i] <- max(SEIR[[1]]$N[i], SEIR[[2]]$N[i], ... , SEIR[[10]]$N[i])
-        N_min[i] <- min(SEIR[[1]]$N[i], ... , SEIR[[10]]$N[i])
+        N0.1_max[i] <- max(SEIR[[1]]$N0.1[i], SEIR[[2]]$N0.1[i],SEIR[[3]]$N0.1[i],SEIR[[4]]$N0.1[i],SEIR[[5]]$N0.1[i],SEIR[[6]]$N0.1[i],SEIR[[7]]$N0.1[i],SEIR[[8]]$N0.1[i],SEIR[[9]]$N0.1[i],SEIR[[10]]$N0.1[i]) 
+        N0.1_min[i] <- min(SEIR[[1]]$N0.1[i], SEIR[[2]]$N0.1[i],SEIR[[3]]$N0.1[i],SEIR[[4]]$N0.1[i],SEIR[[5]]$N0.1[i],SEIR[[6]]$N0.1[i],SEIR[[7]]$N0.1[i],SEIR[[8]]$N0.1[i],SEIR[[9]]$N0.1[i],SEIR[[10]]$N0.1[i])
 
 }
 
+lines(1:100, N0.1_min/100)
+lines(1:100, N0.1_max/100)
+polygon(c(1:100, 100:1), c(N0.1_max/100, rev(N0.1_min/100)), col=rgb(0,1,0,0.5))
 
+
+NR_max <- NR_min <- rep(0, 100)
+
+for (i in 1:100) {
+
+        NR_max[i] <- max(SEIR[[1]]$NR[i], SEIR[[2]]$NR[i],SEIR[[3]]$NR[i],SEIR[[4]]$NR[i],SEIR[[5]]$NR[i],SEIR[[6]]$NR[i],SEIR[[7]]$NR[i],SEIR[[8]]$NR[i],SEIR[[9]]$NR[i], SEIR[[10]]$NR[i])
+        NR_min[i] <- min(SEIR[[1]]$NR[i], SEIR[[2]]$NR[i],SEIR[[3]]$NR[i],SEIR[[4]]$NR[i],SEIR[[5]]$NR[i],SEIR[[6]]$NR[i],SEIR[[7]]$NR[i],SEIR[[8]]$NR[i],SEIR[[9]]$NR[i], SEIR[[10]]$NR[i])
+
+}
+
+lines(1:100, NR_min)
+lines(1:100, NR_max)
+polygon(c(1:100, 100:1), c(NR_max, rev(NR_min)), col=rgb(0,0,1,0.5))
+legend("topleft", inset=.05, legend = c("Whole Pop. (/1000 ppl)","Lowest 10% of Beta (/100 ppl)", "Random 0.1% sample"), col = c, lty=1)
 
 
 
