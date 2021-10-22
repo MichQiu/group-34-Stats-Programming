@@ -1,4 +1,4 @@
-## Write a bit here about the code in general and explain SEIR
+# Write a bit here about the code in general and explain SEIR
 
 model <- function(n=5500000, E0=10, t=100, gamma=1/3, delta=1/5, lambda=0.4/n) {
 # disease transmission simulation model
@@ -18,7 +18,7 @@ S <- E <- I <- R <- N <- N0.1 <- NR <- rep(0, t)
 S[1] <- n-E0; E[1] <- E0
 beta <- rlnorm(n, 0, 0.5); beta <- beta/mean(beta) # relative contact rates of population
 beta0.1 <- quantile(beta, 0.1)
-SAMPLE <- sample(n, size=n/1000, replace=FALSE) # random 0.1% sample??
+SAMPLE <- sample(n, size=n/1000, replace=FALSE) # random 0.1% sample
 
 for (i in 2:t) { # loop over days
         # Add comment about using uniform random deviates to represent probabilities here
@@ -41,7 +41,7 @@ for (i in 2:t) { # loop over days
         NR[i] <- sum(se[SAMPLE])
 
         S[i] <- sum(x==0); E[i] <- sum(x==1)
-        I[i] <- sum(x==2); R[i] <- sum(x==3)
+        I[i] <- sum(x==2); R[i] <- sum(x==3) # update SEIR trajectories
 
 }
 
@@ -49,9 +49,41 @@ return(list(S=S, E=E, I=I, R=R, beta=beta, N=N, N0.1=N0.1, NR=NR))
 
 }
 
-SEIR <- model()
+SEIR <- model() # generate trajectories
 
-plot(1:100, SEIR$N)  
+# in the following plots I standardised the trajectories by scaling down to the smallest
+# size of population we examined - the random 0.1% sample. This means dividing the daily
+# new infection numbers by 1000, in the case of the whole population, and 100 in the case of
+# the lowest 10% of beta values.
+
+N_std <- SEIR$N / 1000
+N0.1_std <- SEIR$N0.1 / 100
+NR_std <- SEIR$NR
+
+# days upon which trajectories reach their maximum
+N_maxday <- which(N_std == max(N_std))
+N0.1_maxday <- which(N0.1_std == max(N0.1_std))
+NR_maxday <- which(NR_std == max(NR_std))
+
+c <- rainbow(3) # colours for lines
+plot(1:100, N_std, 'l', col=c[1], main="Daily New COVID Infections", xlab="day", ylab="number of infections", ylim=c(0,185)) # plot daily new infections for the population as a line
+lines(1:100, N0.1_std, col=c[2])
+lines(1:100, NR_std, col=c[3]) # and other two daily infections data on the same plot
+legend("topleft", inset=.05, legend = c("Whole Pop. (/1000 ppl)","Lowest 10% of Beta (/100 ppl)", "Random 0.1% sample"), col = c, lty=1) # legend for the graph
+
+# vertical lines indicating days at which maxima are attained
+y1 <- -10:floor(max(N_std)); y2 <- -10:floor(max(N0.1_std)); y3 <- -10:max(NR_std)
+lines(rep(N_maxday, length(y1)), y1, col=c[1], lty=2)
+lines(rep(N0.1_maxday, length(y1)), y2, col=c[1], lty=2)
+lines(rep(NR_maxday, length(y1)), y3, col=c[1], lty=2)
+
+
+
+
+
+
+
+
 
 
 
