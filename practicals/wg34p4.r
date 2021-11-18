@@ -31,25 +31,32 @@ finite_difference <- function(theta, f, ..., eps=1e-7, Hessian=FALSE) {
       Hfd[i,] <- (g1 - g0)/eps
     }
   }
+  # check if the gradient is not supplied
   if (is.null(attr(f0, "gradient"))){
-    ic <- 1
+    ic <- 1 # index count
+    # loop through both dimensions of the hessian
     for (i in 1:length(theta)){
       for (j in ic: length(theta)){
-        if (i == j){
+        if (i == j){ 
+          # approximate second order derivatives
+          # f2xx(x,y) = (f(x+eps,y)-2f(x,y)+f(x-eps,y))/(eps**2)
+          # f2yy(x,y) = (f(x,y+eps)-2f(x,y)+f(x,y-eps))/(eps**2)
           th1a <- th0; th1a[i] <- th1a[i] + eps
           th1b <- th0; th1b[i] <- th1b[i] - eps
           Hfd[i,j] <- (f(th1a) - 2 * f0 + f(th1b)) / eps**2
         }
         else{
-          th1a <- th0; th1a + eps
-          th1b <- th0; th1b[i] + eps; th1b[j] - eps
-          th1c <- th0; th1c[i] - eps; th1c[j] + eps
-          th1d <- th0; th1d - eps
-          Hfd[i,j] <- (f(th1a) - f(th1b) - f(th1c) + f(th1d)) / 4 * eps**2
-          Hfd[j,i] <- Hfd[i,j]
+          # approximate second order mixed derivatives
+          # f2xy(x,y) = (f(x+eps,y+eps)-f(x+eps,y-eps)-f(x-eps,y+eps)+f(x-eps,y-eps))/(4*eps**2)
+          th1a <- th0; th1a <- th1a + eps
+          th1b <- th0; th1b[i] <- th1b[i] + eps; th1b[j] <- th1b[j] - eps
+          th1c <- th0; th1c[i] <- th1c[i] - eps; th1c[j] <- th1c[j] + eps
+          th1d <- th0; th1d <- th1d - eps
+          Hfd[i,j] <- (f(th1a) - f(th1b) - f(th1c) + f(th1d)) / (4 * eps**2)
+          Hfd[j,i] <- Hfd[i,j] # symmetric matrix
         }
       }
-      ic <- ic + 1
+      ic <- ic + 1 # increase the index count by 1 to skip all computation of symmetric elements where i != j
     }
   }
   if (Hessian==TRUE) return(Hfd)
