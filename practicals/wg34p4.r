@@ -14,6 +14,15 @@ rb <- function(theta,getg=FALSE,k=10) {
 
 finite_difference <- function(theta, f, ..., eps=1e-7, Hessian=FALSE) {
   # finite differencing for the gradient or hessian
+  # >>> inputs:
+  # theta - vector of initial values for optimization parameters
+  # f - objective function to minimize
+  # ... - arguments supplied in f
+  # eps - epsilon parameter for finite differencing
+  # Hessian - logical condition to compute the Hessian matrix
+  # <<< outputs:
+  # fd - gradient vector
+  # Hfd - hessian matrix
   
   n <- length(theta)
   fd <- matrix(0, n, 1) # initialize gradient vector
@@ -28,7 +37,7 @@ finite_difference <- function(theta, f, ..., eps=1e-7, Hessian=FALSE) {
     if (!is.null(attr(f0, "gradient"))){
       g0 <- attr(f0, "gradient") # obtain the gradients
       g1 <- attr(f1, "gradient")
-      Hfd[i,] <- (g1 - g0)/eps
+      Hfd[i,] <- (g1 - g0)/eps # finite differencing the gradient vectors
     }
   }
   # check if the gradient is not supplied
@@ -53,10 +62,10 @@ finite_difference <- function(theta, f, ..., eps=1e-7, Hessian=FALSE) {
           th1c <- th0; th1c[i] <- th1c[i] - eps; th1c[j] <- th1c[j] + eps
           th1d <- th0; th1d <- th1d - eps
           Hfd[i,j] <- (f(th1a) - f(th1b) - f(th1c) + f(th1d)) / (4 * eps**2)
-          Hfd[j,i] <- Hfd[i,j] # symmetric matrix
+          Hfd[j,i] <- Hfd[i,j] # symmetric matrix entries
         }
       }
-      ic <- ic + 1 # increase the index count by 1 to skip all computation of symmetric elements where i != j
+      ic <- ic + 1 # increase the index count by 1 to skip all computation of symmetric entries where i != j
     }
   }
   if (Hessian==TRUE) return(Hfd)
@@ -71,17 +80,19 @@ bfgs <- function(theta, f, ..., tol=1e-5, fscale=1, maxit=100){
   # tol - convergence tolerance
   # fscale - estimate of magnitude of f at optimum
   # maxit - the maximum number of iterations before stopping
+  # <<< outputs:
+  # param - named list containing the final f, theta, iteration count, gradient and hessian
   
   obj <- f(theta, ...) # get the objective function of theta
   
   # stop the optimization if initial parameters lead to an infinite objective value
-  if (is.infinite(obj)) stop("Objective value is infinite on initial parameters")
+  if (is.infinite(obj[1])) stop("Objective value is infinite on initial parameters")
   
   # finite differencing for the hessian
-  Hfd <- finite_difference(theta, obj, ..., Hessian=TRUE)
+  Hfd <- finite_difference(theta, f, ..., Hessian=TRUE)
   B <- chol2inv(chol(Hfd)) # obtain the inverse hessian
   
-  for (i in 1:maxit) {
+  for (i in 1:maxit) {  
     # obtain gradient by finite differencing if no gradient supplied
     if (is.null(attr(obj, "gradient"))) grad <- finite_difference(theta, f, ...) 
     else grad <- attr(obj, "gradient") # otherwise use the supplied gradient
@@ -92,72 +103,73 @@ bfgs <- function(theta, f, ..., tol=1e-5, fscale=1, maxit=100){
     
     # finite differencing for the gradient of f(theta_{k+1} + Delta)
     if (is.null(attr(obj_new, "gradient"))) grad_new <- finite_difference(theta_new, f, ...)
-    else  grad_new <- attr(obj_new, "gradient") # get the gradient from the updated objective function
+    else grad_new <- attr(obj_new, "gradient") # get the gradient from the updated objective function
     
-    while (is.infinite(obj_new)) { # reduce stepsize if objective function is returning as infinite
-      Delta <- Delta * (2 / 3)
-      theta_new <- theta + Delta
+    while (is.infinite(obj_new[1])) { # reduce step size if objective function is returning as infinite
+      Delta <- Delta * (1/2) # reduce by bisection
+      theta_new <- theta + Delta # update values
       obj_new <- f(theta_new, ...)
     }
     
     # issue warning if objective value increased
-    if (obj_new > obj) warning("Current objective value has increased.")
+    if (obj_new[1] > obj[1]) warning("Current objective value has increased at iteration: ", i)
     
-    # ensure objective function decreases and that the second wolfe condition is satisfied, with c = 0.9
-    while ((t(grad_new) %*% Delta < 0.9 * t(grad) %*% Delta)) {
-      Delta <- Delta * (1/2) # might need to consider increase
+    # mitigate the effect of computer arithmetic limitation where obj_new has the same value as obj
+    # but R returns it as being different, so condition uses isTRUE(all.equal()) rather than ==
+    if (isTRUE(all.equal(obj_new[1],obj[1]))){
+      invisible() # if this condition is satisfied do not alter step length
     }
-    
+    # ensure objective function decreases
+    else{ 
+      while (obj_new[1] > obj[1]) {
+        Delta <- Delta * (1/2) # Reduce step size by bisection
+        theta_new <- theta + Delta # Update theta, objective value and gradient
+        obj_new <- f(theta_new, ...)
+        if (is.null(attr(obj_new, "gradient"))) grad_new <- finite_difference(theta_new, f, ...)
+        else grad_new <- attr(obj_new, "gradient")
+        # ensure the second wolfe condition is satisfied, with c = 0.9
+        while(t(grad_new) %*% Delta < 0.9 * t(grad) %*% Delta){
+          Delta <- Delta * (1.1) # increase step size by by 0.1
+          theta_new <- theta_new + Delta
+          obj_new <- f(theta_new, ...)
+          if (is.null(attr(obj_new, "gradient"))) grad_new <- finite_difference(theta_new, f, ...)
+          else grad_new <- attr(obj_new, "gradient")
+        }
+      }
+    }
+   
     # Check if convergence condition is satisfied
-    if (max(abs(grad)) < (abs(obj_new)+fscale)*tol){
+    if (max(abs(grad)) < (abs(obj_new[1])+fscale)*tol){
       H <- finite_difference(theta, f, ..., Hessian = TRUE) # approximate hessian by finite differencing
       H <- 0.5 * (t(H) + H) # adjustment to asymmetric matrix
-      param <- list(f=obj_new, theta=theta_new, iter=i, g=grad, H=H)
+      param <- list(f=obj_new[1], theta=theta_new, iter=i, g=grad, H=H) # return names list containing outputs
       return(param)
     }  
     
     # Check if max iteration is reached
     if (i == maxit) {
       # Check if convergence condition is not satisfied
-      if (max(abs(grad)) >= (abs(obj_new)+fscale)*tol){
-        warning("Max iteration reached. No convergence.")
+      if (max(abs(grad)) >= (abs(obj_new[1])+fscale)*tol){
+        warning("Max iteration reached. No convergence.") # issue no convergence warning
       }
       # Force end when max iteration is reached
       H <- finite_difference(theta, f, ..., Hessian = TRUE)
       H <- 0.5 * (t(H) + H)
-      param <- list(f=obj_new, theta=theta_new, iter=i, g=grad, H=H)
+      param <- list(f=obj_new[1], theta=theta_new, iter=i, g=grad, H=H)
       return(param)
     }
     else{
+      # compute s and y vector and p values
       s <- theta_new - theta
       y <- grad_new - grad
-      p <- 1/(t(s) %*% y)
+      p <- (1/(t(s) %*% y))[1]
       # BFGS Update
       I <- diag(length(theta_new))
-      B_new <- (I - p * s %&% t(y)) %*% B %*% (I - p * y %*% t(s)) + p * s %*% t(s)
+      B_new <- (I - p * s %*% t(y)) %*% B %*% (I - p * y %*% t(s)) + p * s %*% t(s)
       # Update theta, inverse hessian and objective value
       theta <- theta_new
       B <- B_new
       obj <- obj_new
     }
-    
-    
-    
-    
-    
-    #qrx <- qr(Hfd) # get QR decomposition of hessian
-    # we have R^TRB = I where I is the identity matrix
-    #R <- qr.R(qrx)
-    #RHS <- diag(length(theta))
-    #RB <- forwardsolve(t(R), RHS) # forward solve to find RV (since R^T is lower triangular)
-    #B <- backsolve(R, RB) # backsolve to find B (R is upper triangular)
-
   }
 }
-
-
-
-
-
-
-
